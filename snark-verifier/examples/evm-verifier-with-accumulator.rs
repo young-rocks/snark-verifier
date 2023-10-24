@@ -196,7 +196,7 @@ mod aggregation {
     type BaseFieldEccChip = halo2_wrong_ecc::BaseFieldEccChip<G1Affine, LIMBS, BITS>;
     type Halo2Loader<'a> = loader::halo2::Halo2Loader<'a, G1Affine, BaseFieldEccChip>;
     pub type PoseidonTranscript<L, S> =
-        system::halo2::transcript::halo2::PoseidonTranscript<G1Affine, L, S, T, RATE, R_F, R_P>;
+    system::halo2::transcript::halo2::PoseidonTranscript<G1Affine, L, S, T, RATE, R_F, R_P>;
 
     pub struct Snark {
         protocol: PlonkProtocol<G1Affine>,
@@ -345,7 +345,7 @@ mod aggregation {
     }
 
     impl AggregationCircuit {
-        pub fn new(params: &ParamsKZG<Bn256>, snarks: impl IntoIterator<Item = Snark>) -> Self {
+        pub fn new(params: &ParamsKZG<Bn256>, snarks: impl IntoIterator<Item=Snark>) -> Self {
             let svk = params.get_g()[0].into();
             let snarks = snarks.into_iter().collect_vec();
 
@@ -360,7 +360,7 @@ mod aggregation {
                         &snark.instances,
                         &mut transcript,
                     )
-                    .unwrap();
+                        .unwrap();
                     PlonkSuccinctVerifier::verify(&svk, &snark.protocol, &snark.instances, &proof)
                         .unwrap()
                 })
@@ -513,7 +513,7 @@ fn gen_proof<
             OsRng,
             &mut transcript,
         )
-        .unwrap();
+            .unwrap();
         transcript.finalize()
     };
 
@@ -527,7 +527,7 @@ fn gen_proof<
                 &[instances.as_slice()],
                 &mut transcript,
             )
-            .unwrap(),
+                .unwrap(),
         )
     };
     assert!(accept);
@@ -593,22 +593,113 @@ fn main() {
         params.downsize(8);
         params
     };
+    // {
+    //     let params_app = {
+    //         let mut params = params.clone();
+    //         params.downsize(8);
+    //         params
+    //     };
+    //
+    //     let snarks = [(); 2].map(|_| gen_application_snark(&params_app));
+    //     let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks);
+    //     let pk1 = gen_pk(&params, &agg_circuit);
+    //     let deployment_code = gen_aggregation_evm_verifier(
+    //         &params,
+    //         pk1.get_vk(),
+    //         aggregation::AggregationCircuit::num_instance(),
+    //         aggregation::AggregationCircuit::accumulator_indices(),
+    //     );
+    // }
 
-    let snarks = [(); 2].map(|_| gen_application_snark(&params_app));
-    let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks);
-    let pk1 = gen_pk(&params, &agg_circuit);
-    let deployment_code = gen_aggregation_evm_verifier(
-        &params,
-        pk1.get_vk(),
-        aggregation::AggregationCircuit::num_instance(),
-        aggregation::AggregationCircuit::accumulator_indices(),
-    );
+    // {
+    //     let snarks = [(); 2].map(|_| gen_application_snark(&params_app));
+    //     let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks);
+    //     let pk2 = gen_pk(&params, &agg_circuit);
+    //     {
+    //         let vk1 = pk1.get_vk().to_bytes(SerdeFormat::RawBytes);
+    //         let vk2 = pk2.get_vk().to_bytes(SerdeFormat::RawBytes);
+    //         assert_eq!(vk1, vk2);
+    //     }
+    // }
+
+
+    // {
+    //     {
+    //         let snarks1 = {
+    //             const W: usize = 4;
+    //             const H: usize = 32;
+    //             const K: u32 = 8;
+    //             let snark1 = gen_application_snark(&params_app);
+    //             let circuit = shuffle::MyCircuit::<_, W, H>::rand(&mut OsRng);
+    //             let snark2 = {
+    //                 let mut params = params.clone();
+    //                 params.downsize(15);
+    //                 let pk = gen_pk(&params, &circuit);
+    //                 let protocol = compile(
+    //                     &params,
+    //                     pk.get_vk(),
+    //                     Config::kzg(),
+    //                 );
+    //
+    //                 let proof = gen_proof::<
+    //                     _,
+    //                     _,
+    //                     aggregation::PoseidonTranscript<NativeLoader, _>,
+    //                     aggregation::PoseidonTranscript<NativeLoader, _>,
+    //                 >(&params, &pk, circuit.clone(), vec![]);
+    //                 aggregation::Snark::new(protocol, vec![], proof)
+    //             };
+    //             let snarks = [snark1, snark2];
+    //             snarks
+    //         };
+    //         let snarks2 = {
+    //             const W: usize = 4;
+    //             const H: usize = 32;
+    //             const K: u32 = 8;
+    //             let snark1 = gen_application_snark(&params_app);
+    //             let circuit = shuffle::MyCircuit::<_, W, H>::rand(&mut OsRng);
+    //             let snark2 = {
+    //                 let mut params = params.clone();
+    //                 params.downsize(15);
+    //                 let pk = gen_pk(&params, &circuit);
+    //                 let protocol = compile(
+    //                     &params,
+    //                     pk.get_vk(),
+    //                     Config::kzg(),
+    //                 );
+    //
+    //                 let proof = gen_proof::<
+    //                     _,
+    //                     _,
+    //                     aggregation::PoseidonTranscript<NativeLoader, _>,
+    //                     aggregation::PoseidonTranscript<NativeLoader, _>,
+    //                 >(&params, &pk, circuit.clone(), vec![]);
+    //                 aggregation::Snark::new(protocol, vec![], proof)
+    //             };
+    //             let snarks = [snark1, snark2];
+    //             snarks
+    //         };
+    //         let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks1);
+    //         let pk1 = gen_pk(&params, &agg_circuit);
+    //         let pk2 = {
+    //             let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks2);
+    //             gen_pk(&params, &agg_circuit)
+    //         };
+    //
+    //         {
+    //             let vk1 = pk1.get_vk().to_bytes(SerdeFormat::RawBytes);
+    //             let vk2 = pk2.get_vk().to_bytes(SerdeFormat::RawBytes);
+    //             assert_eq!(vk1, vk2);
+    //         }
+    //     }
+    // }
+
 
     let snarks = {
         const W: usize = 4;
         const H: usize = 32;
         const K: u32 = 8;
-        let snark1= gen_application_snark(&params_app);
+        let snark1 = gen_application_snark(&params_app);
         let circuit = shuffle::MyCircuit::<_, W, H>::rand(&mut OsRng);
         let snark2 = {
             let mut params = params.clone();
@@ -628,32 +719,31 @@ fn main() {
             >(&params, &pk, circuit.clone(), vec![]);
             aggregation::Snark::new(protocol, vec![], proof)
         };
-        let snarks = [snark1,snark2];
+        let snarks = [snark1, snark2];
         snarks
     };
 
     let agg_circuit = aggregation::AggregationCircuit::new(&params, snarks);
-    let pk2 = gen_pk(&params, &agg_circuit);
+    let pk = gen_pk(&params, &agg_circuit);
 
-    {
-        let vk1 = pk1.get_vk().to_bytes(SerdeFormat::RawBytes);
-        let vk2 = pk2.get_vk().to_bytes(SerdeFormat::RawBytes);
-        assert_eq!(vk1, vk2);
-    }
-
-
-    // let proof = gen_proof::<_, _, EvmTranscript<G1Affine, _, _, _>, EvmTranscript<G1Affine, _, _, _>>(
-    //     &params,
-    //     &pk,
-    //     agg_circuit.clone(),
-    //     agg_circuit.instances(),
-    // );
-    // evm_verify(deployment_code, agg_circuit.instances(), proof);
+        let deployment_code = gen_aggregation_evm_verifier(
+            &params,
+            pk.get_vk(),
+            aggregation::AggregationCircuit::num_instance(),
+            aggregation::AggregationCircuit::accumulator_indices(),
+        );
+    let proof = gen_proof::<_, _, EvmTranscript<G1Affine, _, _, _>, EvmTranscript<G1Affine, _, _, _>>(
+        &params,
+        &pk,
+        agg_circuit.clone(),
+        agg_circuit.instances(),
+    );
+    evm_verify(deployment_code, agg_circuit.instances(), proof);
 }
 
 
 pub(crate) mod shuffle {
-    use halo2_curves::ff::{FromUniformBytes,BatchInvert};
+    use halo2_curves::ff::{FromUniformBytes, BatchInvert};
     use halo2_proofs::{
         arithmetic::{CurveAffine, Field},
         circuit::{floor_planner::V1, Layouter, Value},
